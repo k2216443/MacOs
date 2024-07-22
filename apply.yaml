@@ -2,7 +2,10 @@
   hosts: localhost
   become: no
   roles:
-    - git
+    - role: git
+      tags:
+        - git
+
     - role: zsh
       tags:
         - zsh
