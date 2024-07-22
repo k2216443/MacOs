@@ -10,9 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       # Checking out the repository content to the runner.
+      # https://github.com/actions/checkout
       - name: Checkout repository
-        uses: actions/checkout@latest
+        uses: actions/checkout@v4
         with:
           # Fetching the complete history for progressive mode to work.
           fetch-depth: 0 
