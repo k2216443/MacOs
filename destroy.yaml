@@ -1,0 +1,13 @@
+- name: Remove all configuration that was set before
+  hosts: localhost
+  become: false
+  tasks:
+
+    - name: "Task:: ansible.buildin.file --> remove directories"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ansible_env.HOME }}/.gitconfig"
+        - "{{ ansible_env.HOME }}/godscream"
+
