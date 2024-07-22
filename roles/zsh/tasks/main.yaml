@@ -1,0 +1,13 @@
+- name: "Task: Install and upgrade ZSH"
+  community.general.homebrew:
+    name: zsh
+    state: latest
+    update_homebrew: true
+
+- name: "Task:: ansible.buildin.file --> zsh"
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/{{ item }}"
+    src: "{{ item }}"
+    mode: "0644"
+  with_items:
+    - ".zshrc"

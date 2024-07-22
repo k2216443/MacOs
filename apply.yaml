@@ -3,3 +3,6 @@
   become: no
   roles:
     - git
+    - role: zsh
+      tags:
+        - zsh

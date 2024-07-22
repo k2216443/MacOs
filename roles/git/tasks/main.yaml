@@ -17,6 +17,10 @@
 
 - name: "Task:: ansible.buildin.copy --> configuration/git/ikscream.gitconfig"
   ansible.builtin.copy:
-    dest: "{{ ansible_env.HOME }}/godscream/configuration/git/ikscream.gitconfig"
-    src: ikscream.gitconfig
+    dest: "{{ ansible_env.HOME }}/godscream/configuration/git/{{ item }}"
+    src: "{{ item }}"
     mode: "0644"
+  with_items:
+    - ikscream.gitconfig
+    - p2p.gitconfig
+    - wayside.gitconfig
