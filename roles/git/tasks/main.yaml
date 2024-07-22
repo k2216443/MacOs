@@ -1,0 +1,22 @@
+- name: "Task:: ansible.buildin.template --> .gitconfig"
+  ansible.builtin.template:
+    src: ".gitconfig"
+    dest: "{{ ansible_env.HOME }}/.gitconfig"
+    mode: "0644"
+
+- name: "Task:: ansible.buildin.file --> godscream/configuration/git"
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/{{ item }}"
+    recurse: false
+    mode: "0755"
+    state: directory
+  with_items:
+    - "godscream"
+    - "godscream/configuration"
+    - "godscream/configuration/git"
+
+- name: "Task:: ansible.buildin.copy --> configuration/git/ikscream.gitconfig"
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/godscream/configuration/git/ikscream.gitconfig"
+    src: ikscream.gitconfig
+    mode: "0644"

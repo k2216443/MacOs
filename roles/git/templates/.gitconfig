@@ -1,0 +1,11 @@
+[includeIf "gitdir:~/github.com/ikscream/"]
+	path = {{ ansible_env.HOME }}/godscream/configuration/git/ikscream.gitconfig	
+
+[alias]
+	cis = commit -S
+
+[gpg]
+	program = gpg
+
+[commit]
+	gpgsign = true

@@ -1,0 +1,5 @@
+- name: Basic configuration
+  hosts: localhost
+  become: no
+  roles:
+    - git
