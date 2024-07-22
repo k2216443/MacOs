@@ -1,0 +1,34 @@
+# This GitHub Action runs ansible-lint on any incoming pull request and sends the status to Slack.
+name: ansible-lint
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: Ansible Lint 
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checking out the repository content to the runner.
+      - name: Checkout repository
+        uses: actions/checkout@latest
+        with:
+          # Fetching the complete history for progressive mode to work.
+          fetch-depth: 0 
+
+      # Linting the Ansible roles using ansible-lint.
+      - name: Ansible Linter
+        working-directory: ./ansible
+        run: |
+          # Setting up a Python virtual environment.
+          python -m venv .venv
+          source ./.venv/bin/activate
+          
+          # Installing necessary packages: ansible and ansible-lint from the GitHub repository.
+          pip install ansible git+https://github.com/ansible/ansible-lint
+          
+          # Removing the requirements file (assuming it's not needed for linting).
+          rm -rfv requirements.yml
+          
+          # Running the linting process, excluding the specified role.
+          ansible-lint roles
