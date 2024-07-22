@@ -1,0 +1,50 @@
+##
+# Автодополнение для 
+if which aws &> /dev/null ; then 
+  complete -C '/opt/homebrew/bin/aws_completer' aws
+fi
+
+##
+# Динамически подгружаем автодополнение для helm
+if which helm &>/dev/null ; then
+  if [[ -z $HELM_COMPLETE ]] ; then
+    source <(command helm completion zsh)
+    HELM_COMPLETE=1 
+  fi
+fi
+
+##
+# Динамически подгружаем автодополнение для kubectl
+if which kubectl &>/dev/null ; then
+  if [[ -z $KUBECTL_COMPLETE ]] ; then
+    source <(command kubectl completion zsh)
+    KUBECTL_COMPLETE=1 
+  fi
+fi
+
+##
+# Динамически подгружаем автодополнение для kubeadm
+if which kubeadm &>/dev/null ; then
+  if [[ -z $KUBEADM_COMPLETE ]] ; then
+    source <(command kubeadm completion zsh)
+    KUBEADM_COMPLETE=1 
+  fi
+fi
+
+##
+# Динамически подгружаем автодополнение для oc
+if which oc &>/dev/null ; then
+  if [[ -z $OC_COMPLETE ]] ; then
+    source <(command oc completion zsh)
+    OC_COMPLETE=1 
+  fi
+fi
+
+##
+# Динамически подгружаем автодополнение для minikube
+if which minikube &>/dev/null ; then
+  if [[ -z $MINIKUBE_COMPLETE ]] ; then
+    source <(command minikube completion zsh)
+    MINIKUBE_COMPLETE=1 
+  fi
+fi

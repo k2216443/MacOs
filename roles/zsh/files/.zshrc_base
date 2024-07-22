@@ -1,0 +1,370 @@
+
+
+# =========================================================================== #
+# Sudo на обычные команды для различных дистрибутивов                         #
+# =========================================================================== #
+alias apt='sudo apt'
+alias yum='sudo yum'
+alias yumf='sudo yum install -y'
+alias dnf='sudo dnf'
+# alias docker='sudo docker'
+alias pacman='sudo pacman'
+
+# =========================================================================== #
+# Псевдонимы для некоторых системных комманд                                  #
+# =========================================================================== #
+alias t='/usr/bin/time'
+alias mv='mv -v'
+alias mkdir='mkdir -pv'
+alias grep='grep --color=auto'
+alias cp='cp -av'
+alias ls='ls --color=auto -G'   # MacOS bug
+alias scs='sudo systemctl status $1'
+alias scd='sudo systemctl daemon-reload'
+alias scq='sudo systemctl stop $1'
+alias scw='sudo systemctl start $1'
+
+# =========================================================================== #
+# Terraform                                                                   #
+# =========================================================================== #
+alias tp='terraform plan -out plan'
+alias tsl='terraform state list'
+alias tpt='terraform plan -out plan -target'
+alias tap='terraform apply plan'
+alias tss='terraform state show'
+
+
+tptf () {
+  echo "Terraform resource file: $1"
+  TARGETS_RESOURCES=$(cat $1 | grep "resource" | grep '{' | awk -F'"' '{ print "-target "$2"."$4 }' | tr '\n' ' ')
+  echo "Terraform targets command: terraform plan -out plan ${TARGETS_RESOURCES}"
+  TARGETS_MODULES=$(cat $1 |  grep "module" | grep '{' |  awk -F'"' '{ print "-target module."$2 }' | tr '\n' ' ')
+  echo "Terraform targets command: terraform plan -out plan ${TARGETS_MODULES}"
+  TARGETS_RESOURCES=$(echo ${TARGETS_RESOURCES} | sed s~\'~~g)
+  bash -c "terraform plan -out plan ${TARGETS_RESOURCES} ${TARGETS_MODULES}"  
+}
+
+
+# =========================================================================== #
+# Команды для работы с GUI (i3wm)                                             #
+# =========================================================================== #
+alias il='i3lock -c 000000'
+alias gnome-control-center='XDG_CURRENT_DESKTOP=GNOME gnome-control-center'
+
+# =========================================================================== #
+# Управление звуком                                                           #
+# =========================================================================== #
+alias vp='pactl set-sink-volume 0 +10%'
+alias vl='pactl set-sink-volume 0 -10%'
+
+# =========================================================================== #
+# Псевдонимы для Tmux                                                         #
+# =========================================================================== #
+alias ta='tmux attach -t'
+alias tad='tmux attach -d -t'
+alias ts='tmux new-session -s'
+alias tl='tmux list-sessions'
+alias tksv='tmux kill-server'
+alias tkss='tmux kill-session -t'
+
+# =========================================================================== #
+# Псевдонимы для systemd                                                      #
+# =========================================================================== #
+alias sm='systemctl list-units --type mount'
+
+# =========================================================================== #
+# Псевдонимы для Jira                                                         #
+# =========================================================================== #
+alias js='/home/k.ivanov/github/ivanov-konstantin/jira/master/jira_api.py $@ -f /home/k.ivanov/github/ivanov-konstantin/jira/master/jira.standalone.conf'
+alias jh='/home/k.ivanov/github/ivanov-konstantin/jira/master/jira_api.py $@ -f /home/k.ivanov/github/ivanov-konstantin/jira/master/jira.conf'
+
+# =========================================================================== #
+# Псевдонимы для Ansible                                                      #
+# =========================================================================== #
+alias ansible-playbook='time ansible-playbook --diff'
+alias ap='time ansible-playbook --diff'
+alias ag='ansible-galaxy install -r ${1:-requirements.yaml} -f '
+alias ar='ansible-playbook playbook.yaml --diff'
+
+# =========================================================================== #
+# Псевдонимы для SSH                                                          #
+# =========================================================================== #
+alias ssh='ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR'
+
+
+alias setxkbmap_ru='setxkbmap "us,ru" ",winkeys" "grp:win_space_toggle"'
+
+ssh-add()
+{
+  chmod -v 600 $1
+  /usr/bin/ssh-add $1
+}
+
+# =========================================================================== #
+# Функции для Git                                                             #
+# =========================================================================== #
+##
+# Обвноление репы (git pull) с просмотром всех изменений.
+geeg()
+{
+    ##
+    # Получаем текущий первый коммит
+    COMMIT_FIRST=$(git log origin/master | grep -o -E "commit \w{40}" | head -n 1 | awk '{ print $2 }')
+    
+    ##
+    # Получаем первый коммит после pull
+    git pull --rebase
+    COMMIT_FIRST_AFTER=$(git log origin/master | grep -o -E "commit \w{40}" | head -n 1 | awk '{ print $2 }')
+
+    ##
+    # Сверяем хэши полученных коммитов, и, если они различаются, показываем DIFF
+    if [ "${COMMIT_FIRST}" != "${COMMIT_FIRST_AFTER}" ]; then
+        echo -e "\e[36m${COMMIT_FIRST} <--> ${COMMIT_FIRST_AFTER}\e[0m"
+        git log --stat -p ${COMMIT_FIRST}..${COMMIT_FIRST_AFTER}
+    else
+        echo -e "\e[32mРепозиторий актуальный\e[0m"
+    fi
+}
+
+# =============================================================================================== #
+# Запрос в Jira HeadHunter                                                                        #
+# =============================================================================================== #
+jr()
+{
+  JIRA_PATH="${HOME}/github.com/ivanov-konstantin/jira_api/master/jira_api.py"
+  if [ ! -f ${JIRA_PATH} ]; then
+    echo -e "\e[31mПуть не найден: ${JIRA_PATH}"
+    return
+  fi
+  ${JIRA_PATH} $@
+}
+
+# =============================================================================================== #
+# Прокаченный SSH до хостов, проверяем возможность соединения с удаленным узлом по SSH, если      #
+# соединение возможно то подключается вместе с текущим минимальным окружением.                    #
+# =============================================================================================== #
+zssh()
+{
+  ##
+  # Возможные префиксы
+  PREFIXES=(test hhnet.ru)
+  SSH_OPTIONS="-A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR"
+
+  ##
+  # Проверяем наличие переданного хоста в аргументе
+  if [ x"$1" = x ]; then
+    echo "USAGE: zssh <[user@]host> "
+    return
+  fi
+ 
+  ##
+  # Проверяем что работает PING к удаленному хосту
+  HOST=$1
+  if echo $1 | grep '@' &>/dev/null ; then
+    HOST=$(echo $1 | awk -F'@' '{print $2}')
+    ZSSH_USER=$(echo $1 | awk -F'@' '{print $1}')
+  fi
+
+  PING_OUTPUT=$(ping -w 1 -c 1 ${HOST} -q 2>/dev/null)
+  if [ $? -eq 0 ]; then
+    PING_TIMEOUT=$(echo ${PING_OUTPUT} | grep -P '^rtt' | awk -F'/' '{ print $5 }')
+    FOUNDED="yes"
+  else
+    FOUNDED="no"
+    for prefix in $PREFIXES
+    do
+      HOST=$1.$prefix
+      PING_OUTPUT=$(ping -w 1 -c 1 $HOST -q 2>/dev/null)
+      if [ $? -eq 0 ]; then
+        PING_TIMEOUT=$(echo ${PING_OUTPUT} | grep -P '^rtt' | awk -F'/' '{ print $5 }')
+        FOUNDED="yes"
+        break
+      fi
+    done
+
+    if [ "$FOUNDED" = "no" ]; then
+      echo -e "\e[31mno ping from host: '$HOST'\e[0m"
+      return
+    fi
+  fi
+
+  if [ ! -z ${ZSSH_USER} ]; then
+    HOST=${ZSSH_USER}@${HOST}
+  fi  
+
+  ##
+  # Проверяем что работает дефолтный ssh до хоста (и сразу проверяем содержимое файла ${HOME}/.zssh)
+  ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR ${HOST} true 2>/dev/null
+  if [ ! $? -eq 0 ]; then
+  echo -e "\e[31mno ssh to host: '${HOST}'\e[0m"
+    return
+  fi
+
+  VERSION_REMOTE=$(ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR ${HOST} cat .zssh)
+  VERSION_LOCAL=$(cat ${HOME}/.zssh 2>/dev/null)
+  if [ ! $? -eq 0 ]; then
+    echo -e "\e[31mno local version detected\e[0m"
+  fi
+
+  if [ "${VERSION_LOCAL}" != "${VERSION_REMOTE}" ]; then
+    OUTPUT=$(rsync -e "ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR" -av ${HOME}/.zssh ${HOME}/.bashrc ${HOME}/.zshrc ${HOME}/.zssh ${HOME}/.vim ${HOME}/.bash_profile ${HOME}/.tmux.conf ${HOME}/.vimrc ${HOME}/.zssh.d  ${HOST}:  2>&1)
+    if [ ! $? -eq 0 ]; then
+      echo -e "\e[31m${OUTPUT}\e[0m"
+    fi   
+    echo -e "\e[35m${HOST}: ${PING_TIMEOUT}|${VERSION_REMOTE} --> ${VERSION_LOCAL}\e[0m"
+  else
+    echo -e "\e[32m${HOST}: ${PING_TIMEOUT}|${VERSION_LOCAL}\e[0m"
+  fi
+  ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR ${HOST}  
+}
+
+
+# =============================================================================================== #
+# Более гибкий SSH
+# =============================================================================================== #
+xssh()
+{ 
+  ##
+  # Проверяем наличие переданного хоста в аргументе
+  if [ x"$1" = x ]; then
+    echo "USAGE: xssh <[user@]host> [commands]"
+    return
+  fi
+
+  ##
+  # Опредеяем логин и хост, если указаны
+  local XSSH_USER=${USER}
+  local XSSH_HOST=$1
+
+  if echo $1 | grep '@' &>/dev/null ; then
+    XSSH_HOST=$(echo $1 | awk -F'@' '{print $2}')
+    XSSH_USER=$(echo $1 | awk -F'@' '{print $1}')
+  fi  
+  
+  ##
+  # Проверяем что работает дефолтный ssh до хоста (и сразу проверяем содержимое файла ${HOME}/.zssh)
+  ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR ${XSSH_USER}@${XSSH_HOST} true 2>/dev/null
+  if [ ! $? -eq 0 ]; then
+    echo -e "\e[31mno ssh to host: '${XSSH_USER}@${XSSH_HOST}'\e[0m"
+    return
+  fi
+
+  ##
+  # Получаем версии, и реализуем логику в зависимости от них
+  local XSSH_VER_REMOTE=$(ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR ${XSSH_USER}@${XSSH_HOST} cat .zssh)
+  local XSSH_VER_LOCAL=$(cat ${HOME}/.zssh 2>/dev/null)
+  if [ ! $? -eq 0 ]; then
+    echo -e "\e[31mno local version detected\e[0m"
+  fi
+
+  if [ "${XSSH_VER_LOCAL}" != "${XSSH_VER_REMOTE}" ]; then
+    local XSSH_RSYNC=$(rsync -e "ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR" -av ${HOME}/.zssh ${HOME}/.bashrc ${HOME}/.zshrc ${HOME}/.zssh ${HOME}/.vim ${HOME}/.bash_profile ${HOME}/.tmux.conf ${HOME}/.vimrc ${HOME}/.zssh.d  ${XSSH_USER}@${XSSH_HOST}:  2>&1)
+    if [ ! $? -eq 0 ]; then
+      echo -e "\e[31m${XSSH_RSYNC}\e[0m"
+    fi   
+    echo -e "\e[35m${HOST}: ${XSSH_VER_REMOTE} --> ${XSSH_VER_LOCAL}\e[0m"
+  else
+    echo -e "\e[32m${HOST}: ${XSSH_VER_LOCAL}\e[0m"
+  fi
+  ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o LogLevel=ERROR $@
+}
+
+# =============================================================================================== #
+# Функция для создания backup директории. Помещает её в ~/.archive                                #
+#                                                                                                 #
+# Аргументы:                                                                                      #
+#   * - пути до директорий которые необходимо бэкапить                                            #
+#                                                                                                 #
+# Описание:                                                                                       #
+#   Путь до директории с бэкапом: ${HOME}/.archive                                                #
+#   Имя директории: $(hostname).$(readlink -f ${directory_to_backup} | sed s~/~_~g)               #
+# =============================================================================================== #
+backup_dir()
+{
+
+  printf "--------------------------------------------------------------------------------\n"
+  printf "\e[35m[%-4s] Резервирование директорий начато.\e[0m\n" $(date +%T)
+  for directory_to_backup in $@
+  do
+    ##
+    # Формирование переменных
+    printf "\e[35m[%-4s] Директория: %s\e[0m\n" $(date +%T) "${directory_to_backup}" 
+
+    DIR="$(hostname).$(readlink -f ${directory_to_backup} | sed s~/~_~g)"
+    DATE=$(date +%Y-%m-%d)
+
+    printf "\e[32m[%-4s] Имя архива: ${DIR}\e[0m\n" $(date +%T)
+
+    ##
+    # Создаем директория, если её нет
+    if [ ! -d ${HOME}/.archive/${DIR}/${DATE} ]; then
+      mkdir -p ${HOME}/.archive/${DIR}/${DATE} &>/dev/null
+    fi
+
+    printf "\e[35m[%-4s] Архивирование..\e[0m\n" $(date +%T)
+    tar cf ${DIR}.tar ${directory_to_backup}
+
+    printf "\e[35m[%-4s] Перемещение..\e[0m\n" $(date +%T)
+    mv  ${DIR}.tar ${HOME}/.archive/${DIR}/${DATE} &>/dev/null
+
+    printf "\e[35m[%-4s] Сжатие..\e[0m\n" $(date +%T)
+    xz -T 0 -9z ${HOME}/.archive/${DIR}/${DATE}/${DIR}.tar 2>/dev/null
+
+    printf "\e[35m[%-4s] Удаление..\e[0m\n" $(date +%T)
+    rm -rf ${directory_to_backup}
+  done
+  printf "--------------------------------------------------------------------------------\n"
+}
+
+
+# =============================================================================================== #
+# Запрос в Jira GeekDeploy                                                                        #
+# =============================================================================================== #
+jira()
+{
+  JIRA_PATH="/home/k.ivanov/github/ivanov-konstantin/jira/master/jira_api.py"
+  JIRA_CONFIG="/home/k.ivanov/github/ivanov-konstantin/jira/master/jira_geekdeploy.conf"
+  if [ ! -f ${JIRA_PATH} ]; then
+    echo -e "\e[31mПуть не найден: ${JIRA_PATH}"
+    return
+  fi
+  ${JIRA_PATH} -f ${JIRA_CONFIG} $@
+}
+
+##
+# TODO
+ssh-reconnect()
+{
+  unilink="/tmp/ssh-agent-$USER"
+  if [ -L $unilink ] || [ ! -e "$unilink" ]; then
+      unisock=$(readlink -f $unilink)
+      if [ ! -S "$unisock" ];  then
+          if [ -S "$SSH_AUTH_SOCK" ]; then
+              rm -f $unilink
+              ln -sf $SSH_AUTH_SOCK $unilink
+              export SSH_AUTH_SOCK=$unilink
+          fi
+      else
+          export SSH_AUTH_SOCK=$unilink
+      fi
+  fi
+}
+
+docker_containers_purge()
+{
+  for c in $(sudo docker ps -a | tail -n +2 | awk '{ print $NF }')
+  do 
+    sudo docker stop -t 0 $c && sudo docker rm $c 
+  done 
+  for i in $(sudo docker images | awk '{ print $3 }' | tail -n +2)
+  do 
+    sudo docker image rm $i --force
+  done
+}
+
+vscode_clean()
+{
+  for i in $(code --list-extensions); do code --uninstall-extension $i ; done 
+  code --install-extension alefragnani.project-manager ms-azuretools.vscode-docker ms-python.python
+}
+

@@ -11,3 +11,5 @@
     mode: "0644"
   with_items:
     - ".zshrc"
+    - ".zshrc_base"
+    - ".zshrc_cmd"
