@@ -6,6 +6,10 @@
 
 [includeIf "gitdir:~/github.com/waysidepublishing.com/"]
 	path = {{ ansible_env.HOME }}/godscream/configuration/git/wayside.gitconfig
+
+[includeIf "gitdir:~/github.com/k2216443/"]
+	path = {{ ansible_env.HOME }}/godscream/configuration/git/k2216443.gitconfig
+
 [alias]
 	cis = commit -S
 
