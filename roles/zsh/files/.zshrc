@@ -145,3 +145,41 @@ if [ -f '/Users/godscream/Applications/google-cloud-sdk/path.zsh.inc' ]; then . 
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/godscream/Applications/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/godscream/Applications/google-cloud-sdk/completion.zsh.inc'; fi
+
+
+sg()
+{
+  env | grep -i SSH_AUTH_SOCK | awk -F= '{ print $2 }'
+}
+
+# gd_ssh_keygen()
+
+sc()
+{
+  echo "SSH switcher started --> $1"
+  if [ x"$1" = "x" ]; then
+    echo "Argument not founded"
+    return 
+  fi
+  echo "Argument founded"
+
+  SOCK_REQUESTED="${HOME}/.ssh/ssh-agent-${1}.socket"
+  SOCK_CURRENT=$(env | grep -i SSH_AUTH_SOCK | awk -F'=' '{ print $2 }')
+
+  echo "SOCK_CURRENT: ${SOCK_CURRENT}"
+  if [ "${SOCK_CURRENT}" = "${SOCK_REQUESTED}" ]; then
+    echo "Requested is current: ${SOCK_REQUESTED} = ${SOCK_CURRENT}"
+    return
+  fi
+
+  if [ ! -e "${SOCK_REQUESTED}" ]; then
+    ssh-agent -a "${SOCK_REQUESTED}"
+    echo -e "ssh-agent:: starting new ssh-agent --> ${SOCK_REQUESTED}"
+  fi
+
+  export SSH_AUTH_SOCK="${SOCK_REQUESTED}"
+  export SSH_AUTH_PROFILE=$1
+  PROMPT="${PROMPT#*]} "
+  PROMPT="[${SSH_AUTH_PROFILE}] ${PROMPT}"
+}
+
