@@ -4,6 +4,9 @@
 [includeIf "gitdir:~/github.com/p2p.org/"]
 	path = {{ ansible_env.HOME }}/godscream/configuration/git/p2p.gitconfig
 
+[includeIf "gitdir:~/p2p.com/"]
+	path = {{ ansible_env.HOME }}/godscream/configuration/git/p2p.gitconfig
+
 [includeIf "gitdir:~/github.com/waysidepublishing.com/"]
 	path = {{ ansible_env.HOME }}/godscream/configuration/git/wayside.gitconfig
 
