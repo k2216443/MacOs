@@ -183,3 +183,10 @@ sc()
   PROMPT="[${SSH_AUTH_PROFILE}] ${PROMPT}"
 }
 
+a() {
+  OPTIONS=""
+  if [ -n "$ANSIBLE_USER" ]; then
+    OPTIONS="--user=${ANSIBLE_USER}"
+  fi
+  time ansible-playbook $OPTIONS --diff $@
+}
