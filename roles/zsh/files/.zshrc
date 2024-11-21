@@ -179,7 +179,7 @@ sc()
 
   export SSH_AUTH_SOCK="${SOCK_REQUESTED}"
   export SSH_AUTH_PROFILE=$1
-  PROMPT="${PROMPT#*]} "
+  PROMPT="${PROMPT#*]}"
   PROMPT="[${SSH_AUTH_PROFILE}] ${PROMPT}"
 }
 
